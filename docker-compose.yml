@@ -1,0 +1,81 @@
+version: '3.7'
+services:
+  memcached:
+    image: memcached:alpine
+
+  php:
+    image: kowashi/bitrix-fpm
+    environment:
+      - BITRIX_VA_VER=7.3.3
+    volumes:
+      - ./www:/var/www/html/bitrix:cached
+      - ./docker/msmtp/conf/:/root
+      - ./docker/msmtp/logs/:/var/log/msmtp
+
+  web:
+    image: selim13/bitrix-nginx
+    volumes:
+      - ./www:/var/www/html/bitrix:cached
+    ports:
+      - '80:80'
+      - '443:443'
+      - '22222:22'
+      - '8893:8893'
+      - '8894:8894'
+    environment:
+      - BX_UPSTREAM=php:9000
+      - BX_ROOT=bitrix
+      - BX_HOSTNAME=localhost
+  mysql:
+    image: mariadb
+    restart: always
+
+    command: mysqld --sql_mode="" --character-set-server=utf8 --collation-server=utf8_slovenian_ci --init-connect='SET NAMES UTF8;' --innodb-flush-log-at-trx-commit=0
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql:cached
+      - ./docker/mysql/logs:/var/log/mysql/
+      - ./docker/mysql/conf:/etc/mysql/mariadb.conf.d
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - TZ=Europe/Moscow
+
+  redis:
+    image: redis
+
+  push-server-sub:
+    image: ikarpovich/bitrix-push-server
+    ports:
+      - '8081:80'
+    links:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - LISTEN_HOSTNAME=0.0.0.0
+      - LISTEN_PORT=80
+      - SECURITY_KEY=testtesttest
+      - MODE=sub
+
+  push-server-pub:
+    image: ikarpovich/bitrix-push-server
+    links:
+      - redis
+    networks:
+      - default
+    environment:
+      - REDIS_HOST=redis
+      - LISTEN_HOSTNAME=0.0.0.0
+      - LISTEN_PORT=80
+      - SECURITY_KEY=testtesttest
+      - MODE=pub
+  sphinx:
+    image: romeoz/docker-sphinxsearch
+    restart: always
+    volumes:
+      - ./docker/sphinx/data:/var/lib/sphinxsearch/data
+      - ./docker/sphinx/logs:/var/log/sphinxsearch
+      - ./docker/sphinx/conf:/etc/sphinxsearch

@@ -1,0 +1,4 @@
+docker/mysql/data/*
+docker/msmtp/conf/.msmtprc
+docker/*/logs/*
+docker/*/data/*
