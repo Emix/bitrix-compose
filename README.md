@@ -1,7 +1,7 @@
-#Bitrix in Microservices
+# Bitrix in Microservices
 
 
-#####Setup
+##### Setup
 
 To configure the client smtp, you need to edit 
 `docker/msmtp/conf/.msmtprc`
