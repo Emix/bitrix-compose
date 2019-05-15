@@ -16,6 +16,7 @@ services:
     image: selim13/bitrix-nginx
     volumes:
       - ./www:/var/www/html/bitrix:cached
+      - ./docker/nginx/conf:/etc/nginx/conf.d:ro
     ports:
       - '80:80'
       - '443:443'
